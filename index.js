@@ -1,9 +1,15 @@
-// import THREE from 'n3d-threejs'
+import THREE from 'n3d-threejs'
 
 class Perlin {
   constructor(rdrr) {
-    this.rdrr = rdrr | new THREE.WebGLRenderer({alpha : true});
+    if(rdrr == undefined) {
+      this.rdrr = new THREE.WebGLRenderer({alpha : true});
+      this.rdrr.setSize(window.innerWidth, window.innerHeight);
+      document.body.appendChild(this.rdrr.domElement);
+    } else { this.rdrr = rdrr; }
+    // console.log(THREE);
+
   }
 }
 
-// export default Perlin
+export default Perlin
