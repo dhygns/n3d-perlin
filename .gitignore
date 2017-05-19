@@ -1,7 +1,6 @@
 .DS_Store
-.npm*
 .idea
-Makefile
 docs/
 support/
 test/
+node_modules/
