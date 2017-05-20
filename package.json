@@ -4,7 +4,10 @@
   "description": "Perlin Noise Filter For THREEjs",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "webpack ./demo/index.js ./demo/index.bundle.js",
+    "auto-build": "webpack --watch ./demo/index.js ./demo/index.bundle.js",
+    "start": "start ./demo/index.html"
   },
   "repository": {
     "type": "git",
