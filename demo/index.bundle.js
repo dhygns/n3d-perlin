@@ -1075,6 +1075,8 @@ THREE.MorphBlendMesh.prototype.update=function(a){for(var b=0,c=this.animationsL
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_n3d_threejs__ = __webpack_require__(0);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_n3d_threejs___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_n3d_threejs__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__src_grid_js__ = __webpack_require__(3);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__src_flow_js__ = __webpack_require__(4);
+
 
 
 
@@ -1090,17 +1092,20 @@ class Perlin {
 
 
     this.grid = new __WEBPACK_IMPORTED_MODULE_1__src_grid_js__["a" /* default */](this.rdrr, width, height);
+    this.flow = new __WEBPACK_IMPORTED_MODULE_2__src_flow_js__["a" /* default */](this.rdrr, 512, 512, this.grid);
+
 
     this.camera = new __WEBPACK_IMPORTED_MODULE_0_n3d_threejs___default.a.Camera();
     this.scene = new __WEBPACK_IMPORTED_MODULE_0_n3d_threejs___default.a.Scene();
     this.scene.add(new __WEBPACK_IMPORTED_MODULE_0_n3d_threejs___default.a.Mesh(
       new __WEBPACK_IMPORTED_MODULE_0_n3d_threejs___default.a.PlaneGeometry(2.0, 2.0),
-      new __WEBPACK_IMPORTED_MODULE_0_n3d_threejs___default.a.MeshBasicMaterial({ map : this.grid.getTexture() })
+      new __WEBPACK_IMPORTED_MODULE_0_n3d_threejs___default.a.MeshBasicMaterial({ map : this.flow.getTexture() })
     ));
   }
 
   update(dt) {
     this.grid.update(dt);
+    this.flow.update(dt);
   }
 
   renderForDebug() {
@@ -1160,8 +1165,8 @@ console.log(perlin);
 class Grid {
   constructor(rdrr, width, height) {
     this.rdrr = rdrr;
-    this.width = width == undefined ? 16 : width;
-    this.height = height == undefined ? 16 : height;
+    this.width = width == undefined ? 32 : width;
+    this.height = height == undefined ? 32 : height;
 
     this.infoTexture = new __WEBPACK_IMPORTED_MODULE_0_n3d_threejs___default.a.WebGLRenderTarget(
       this.width, this.height , {
@@ -1219,11 +1224,11 @@ class Grid {
           else {
             vec3 data = texture2D(unif_texture, vtex).rgb;
             float spd = (data.r);
-            float rad = (data.g * 2.0 - 1.0);
+            float rad = (data.g * 2.0);
             float rpd = (data.b * 2.0 - 1.0);
             rad += rpd * unif_dt;
 
-            retcolor = vec4(data.r, fract(rad * 0.5 + 0.5), data.b, 1.0);
+            retcolor = vec4(data.r, fract(rad * 0.5 + 1.0), data.b, 1.0);
           }
           gl_FragColor = retcolor;
         }
@@ -1269,6 +1274,107 @@ class Grid {
 }
 
 /* harmony default export */ __webpack_exports__["a"] = (Grid);
+
+
+/***/ }),
+/* 4 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_n3d_threejs__ = __webpack_require__(0);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_n3d_threejs___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_n3d_threejs__);
+
+
+
+class Flow {
+  constructor(rdrr, width, height, grid) {
+    this.width = width == undefined ? 512 : width;
+    this.height = height == undefined ? 512 : height;
+
+    this.rdrr = rdrr;
+
+
+    this.texture = new __WEBPACK_IMPORTED_MODULE_0_n3d_threejs___default.a.WebGLRenderTarget(this.width, this.height, {
+      minFilter : __WEBPACK_IMPORTED_MODULE_0_n3d_threejs___default.a.LinearFilter,
+      magFilter : __WEBPACK_IMPORTED_MODULE_0_n3d_threejs___default.a.LinearFiletr,
+    });
+
+    this.camera = new __WEBPACK_IMPORTED_MODULE_0_n3d_threejs___default.a.Camera();
+    this.scene = new __WEBPACK_IMPORTED_MODULE_0_n3d_threejs___default.a.Scene();
+
+    this.scene.add(new __WEBPACK_IMPORTED_MODULE_0_n3d_threejs___default.a.Mesh(
+      new __WEBPACK_IMPORTED_MODULE_0_n3d_threejs___default.a.PlaneGeometry(2.0, 2.0),
+      new __WEBPACK_IMPORTED_MODULE_0_n3d_threejs___default.a.ShaderMaterial({
+        uniforms : {
+          unif_texture : { type : "t", value : grid.getTexture()},
+          unif_resolution : { type : "2f", value : [ grid.getWidth(), grid.getHeight()] }
+        },
+        fragmentShader : `
+        #define PI ` + Math.PI + `
+        uniform sampler2D unif_texture;
+        uniform vec2 unif_resolution;
+
+        varying vec2 vtex;
+
+        void main() {
+
+          vec2 offsetX = vec2(1.0, 0.0) / unif_resolution;
+          vec2 offsetY = vec2(0.0, 1.0) / unif_resolution;
+
+          vec4 data00 = texture2D(unif_texture, vtex + offsetX * 0.0 + offsetY * 0.0);
+          vec4 data01 = texture2D(unif_texture, vtex + offsetX * 0.0 + offsetY * 1.0);
+          vec4 data10 = texture2D(unif_texture, vtex + offsetX * 1.0 + offsetY * 0.0);
+          vec4 data11 = texture2D(unif_texture, vtex + offsetX * 1.0 + offsetY * 1.0);
+
+          vec2 grid00 = vec2(
+            data00.x * sin(data00.y * 2.0 * PI),
+            data00.x * cos(data00.y * 2.0 * PI)
+          );
+          vec2 grid01 = vec2(
+            data01.x * sin(data01.y * 2.0 * PI),
+            data01.x * cos(data01.y * 2.0 * PI)
+          );
+          vec2 grid10 = vec2(
+            data10.x * sin(data10.y * 2.0 * PI),
+            data10.x * cos(data10.y * 2.0 * PI)
+          );
+          vec2 grid11 = vec2(
+            data11.x * sin(data11.y * 2.0 * PI),
+            data11.x * cos(data11.y * 2.0 * PI)
+          );
+          vec2 grid = (vtex * unif_resolution - floor(vtex * unif_resolution));
+
+          float ty = mix(
+            dot(grid00, vec2(0.0 + grid.x , 0.0 + grid.y)),
+            dot(grid10, vec2(1.0 - grid.x , 0.0 + grid.y)), grid.x);
+          float by = mix(
+            dot(grid01, vec2(0.0 + grid.x , 1.0 - grid.y)),
+            dot(grid11, vec2(1.0 - grid.x , 1.0 - grid.y)), grid.x);
+          float va = mix(ty, by, grid.y);
+
+          gl_FragColor = vec4(vec3(va), 1.0);
+        }
+        `,
+        vertexShader : `
+        varying vec2 vtex;
+        void main() {
+          vtex = uv;
+          gl_Position = vec4(position, 1.0);
+        }
+        `
+      })
+    ));
+  }
+
+  update(dt) {
+    this.rdrr.render(this.scene, this.camera, this.texture);
+  }
+
+  getTexture() { return this.texture; }
+}
+
+
+/* harmony default export */ __webpack_exports__["a"] = (Flow);
 
 
 /***/ })
