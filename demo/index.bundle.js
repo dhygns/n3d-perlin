@@ -1074,8 +1074,8 @@ THREE.MorphBlendMesh.prototype.update=function(a){for(var b=0,c=this.animationsL
 "use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_n3d_threejs__ = __webpack_require__(0);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_n3d_threejs___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_n3d_threejs__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__src_grid_js__ = __webpack_require__(3);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__src_flow_js__ = __webpack_require__(4);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__src_grid_js__ = __webpack_require__(4);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__src_flow_js__ = __webpack_require__(3);
 
 
 
@@ -1092,7 +1092,7 @@ class Perlin {
 
 
     this.grid = new __WEBPACK_IMPORTED_MODULE_1__src_grid_js__["a" /* default */](this.rdrr, width, height);
-    this.flow = new __WEBPACK_IMPORTED_MODULE_2__src_flow_js__["a" /* default */](this.rdrr, 512, 512, this.grid);
+    this.flow = new __WEBPACK_IMPORTED_MODULE_2__src_flow_js__["a" /* default */](this.rdrr, 1024, 1024, this.grid);
 
 
     this.camera = new __WEBPACK_IMPORTED_MODULE_0_n3d_threejs___default.a.Camera();
@@ -1153,143 +1153,10 @@ console.log(perlin);
 
 
 
-/* Texture that get information of Grid */
-/*
-  Grid Class는 Grid 정보를 가진 Texture를 정의, 관리 해준다.
-  infoTexture의 정보는 아래와 같다.
-  r : 백터의 크기
-  g : 백터의 각도
-  b : 백터의 각속도
-*/
-
-class Grid {
-  constructor(rdrr, width, height) {
-    this.rdrr = rdrr;
-    this.width = width == undefined ? 32 : width;
-    this.height = height == undefined ? 32 : height;
-
-    this.infoTexture = new __WEBPACK_IMPORTED_MODULE_0_n3d_threejs___default.a.WebGLRenderTarget(
-      this.width, this.height , {
-        minFilter : __WEBPACK_IMPORTED_MODULE_0_n3d_threejs___default.a.NearestFilter,
-        magFilter : __WEBPACK_IMPORTED_MODULE_0_n3d_threejs___default.a.NearestFilter,
-        wrapS : __WEBPACK_IMPORTED_MODULE_0_n3d_threejs___default.a.RepeatWrapping,
-        wrapT : __WEBPACK_IMPORTED_MODULE_0_n3d_threejs___default.a.RepeatWrapping,
-      }
-    );
-    this.tempTexture = new __WEBPACK_IMPORTED_MODULE_0_n3d_threejs___default.a.WebGLRenderTarget(
-      this.width, this.height , {
-        minFilter : __WEBPACK_IMPORTED_MODULE_0_n3d_threejs___default.a.NearestFilter,
-        magFilter : __WEBPACK_IMPORTED_MODULE_0_n3d_threejs___default.a.NearestFilter,
-        wrapS : __WEBPACK_IMPORTED_MODULE_0_n3d_threejs___default.a.RepeatWrapping,
-        wrapT : __WEBPACK_IMPORTED_MODULE_0_n3d_threejs___default.a.RepeatWrapping,
-      }
-    );
-
-    this.commonCamera = new __WEBPACK_IMPORTED_MODULE_0_n3d_threejs___default.a.Camera();
-
-    this.tempScene = new __WEBPACK_IMPORTED_MODULE_0_n3d_threejs___default.a.Scene();
-    this.infoScene = new __WEBPACK_IMPORTED_MODULE_0_n3d_threejs___default.a.Scene();
-
-    this.uniforms = {
-      unif_texture : { type : "t", value : this.infoTexture },
-      unif_dt : { type : "1f", value : 0.0},
-      unif_isinit : { type : "1f", value : 0.0},
-      unif_seed : { type : "1f", value : Math.random() }
-    };
-    this.tempMesh = new __WEBPACK_IMPORTED_MODULE_0_n3d_threejs___default.a.Mesh(
-      new __WEBPACK_IMPORTED_MODULE_0_n3d_threejs___default.a.PlaneGeometry(2.0, 2.0),
-      new __WEBPACK_IMPORTED_MODULE_0_n3d_threejs___default.a.ShaderMaterial({
-        uniforms : this.uniforms,
-        fragmentShader : `
-        uniform sampler2D unif_texture;
-        uniform float unif_dt;
-        uniform float unif_isinit;
-        uniform float unif_seed;
-
-        varying vec2 vtex;
-
-        float rand(vec2 co){
-            return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453);
-        }
-
-        void main(void) {
-          vec4 retcolor = vec4(0.0);
-          if(unif_isinit < 0.5) {
-            retcolor = vec4(
-              rand(vtex * unif_seed + 0.01),
-              rand(vtex * unif_seed + 0.11),
-              rand(vtex * unif_seed + 0.23),
-              1.0);
-          }
-          else {
-            vec3 data = texture2D(unif_texture, vtex).rgb;
-            float spd = (data.r);
-            float rad = (data.g * 2.0);
-            float rpd = (data.b * 2.0 - 1.0);
-            rad += rpd * unif_dt;
-
-            retcolor = vec4(data.r, fract(rad * 0.5 + 1.0), data.b, 1.0);
-          }
-          gl_FragColor = retcolor;
-        }
-        `,
-        vertexShader : `
-        varying vec2 vtex;
-        void main(void) {
-          vtex = uv;
-          gl_Position = vec4(position, 1.0);
-        }
-        `
-      })
-    );
-    this.infoMesh = new __WEBPACK_IMPORTED_MODULE_0_n3d_threejs___default.a.Mesh(
-      new __WEBPACK_IMPORTED_MODULE_0_n3d_threejs___default.a.PlaneGeometry(2.0, 2.0),
-      new __WEBPACK_IMPORTED_MODULE_0_n3d_threejs___default.a.MeshBasicMaterial({map : this.tempTexture})
-    );
-
-    this.tempScene.add(this.tempMesh);
-    this.infoScene.add(this.infoMesh);
-
-    this.rebuild();
-  }
-
-  rebuild() {
-    this.uniforms.unif_isinit.value = 0.0;
-    this.uniforms.unif_seed.value = Math.random();
-    this.rdrr.render(this.tempScene, this.commonCamera, this.tempTexture);
-    this.rdrr.render(this.infoScene, this.commonCamera, this.infoTexture);
-  }
-
-  update(dt) {
-    this.uniforms.unif_dt.value = dt;
-    this.uniforms.unif_isinit.value = 1.0;
-    this.rdrr.render(this.tempScene, this.commonCamera, this.tempTexture);
-    this.rdrr.render(this.infoScene, this.commonCamera, this.infoTexture);
-
-  }
-
-  getWidth() { return this.width; }
-  getHeight() { return this.height; }
-  getTexture() { return this.infoTexture; }
-}
-
-/* harmony default export */ __webpack_exports__["a"] = (Grid);
-
-
-/***/ }),
-/* 4 */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_n3d_threejs__ = __webpack_require__(0);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_n3d_threejs___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_n3d_threejs__);
-
-
-
 class Flow {
   constructor(rdrr, width, height, grid) {
-    this.width = width == undefined ? 512 : width;
-    this.height = height == undefined ? 512 : height;
+    this.width = width == undefined ? 128 : width;
+    this.height = height == undefined ? 128 : height;
 
     this.rdrr = rdrr;
 
@@ -1343,16 +1210,35 @@ class Flow {
             data11.x * cos(data11.y * 2.0 * PI)
           );
           vec2 grid = (vtex * unif_resolution - floor(vtex * unif_resolution));
+          vec2 pick00 = vec2(0.0 + grid.x , 0.0 + grid.y);
+          vec2 pick10 = vec2(1.0 - grid.x , 0.0 + grid.y);
+          vec2 pick01 = vec2(0.0 + grid.x , 1.0 - grid.y);
+          vec2 pick11 = vec2(1.0 - grid.x , 1.0 - grid.y);
 
-          float ty = mix(
-            dot(grid00, vec2(0.0 + grid.x , 0.0 + grid.y)),
-            dot(grid10, vec2(1.0 - grid.x , 0.0 + grid.y)), grid.x);
-          float by = mix(
-            dot(grid01, vec2(0.0 + grid.x , 1.0 - grid.y)),
-            dot(grid11, vec2(1.0 - grid.x , 1.0 - grid.y)), grid.x);
-          float va = mix(ty, by, grid.y);
+          // pick00 = normalize(pick00);
+          // pick10 = normalize(pick10);
+          // pick01 = normalize(pick01);
+          // pick11 = normalize(pick11);
 
-          gl_FragColor = vec4(vec3(va), 1.0);
+          float a0 = dot(grid00, pick00);
+          float a1 = dot(grid10, pick10);
+          float a2 = dot(grid01, pick01);
+          float a3 = dot(grid11, pick11);
+
+          float A0 = a0 + smoothstep(0.0, 1.0, grid.x) * ( a1 - a0);
+          float A1 = a2 + smoothstep(0.0, 1.0, grid.x) * ( a3 - a2);
+
+          // A0 = abs(A0);
+          // A1 = abs(A1);
+
+          float A2 = A0 + smoothstep(0.0, 1.0, grid.y) * ( A1 - A0);
+
+
+          gl_FragColor = vec4(
+            max(0.0,  A2),
+            0.0,//0.5 + 0.5 * A2,
+            max(0.0, -A2),
+            1.0);
         }
         `,
         vertexShader : `
@@ -1375,6 +1261,138 @@ class Flow {
 
 
 /* harmony default export */ __webpack_exports__["a"] = (Flow);
+
+
+/***/ }),
+/* 4 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_n3d_threejs__ = __webpack_require__(0);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_n3d_threejs___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_n3d_threejs__);
+
+
+
+/* Texture that get information of Grid */
+/*
+  Grid Class는 Grid 정보를 가진 Texture를 정의, 관리 해준다.
+  infoTexture의 정보는 아래와 같다.
+  r : 백터의 크기
+  g : 백터의 각도
+  b : 백터의 각속도
+*/
+
+class Grid {
+  constructor(rdrr, width, height) {
+    this.rdrr = rdrr;
+    this.width = width == undefined ? 8 : width;
+    this.height = height == undefined ? 8 : height;
+
+    this.infoTexture = new __WEBPACK_IMPORTED_MODULE_0_n3d_threejs___default.a.WebGLRenderTarget(
+      this.width, this.height , {
+        minFilter : __WEBPACK_IMPORTED_MODULE_0_n3d_threejs___default.a.NearestFilter,
+        magFilter : __WEBPACK_IMPORTED_MODULE_0_n3d_threejs___default.a.NearestFilter,
+        wrapS : __WEBPACK_IMPORTED_MODULE_0_n3d_threejs___default.a.RepeatWrapping,
+        wrapT : __WEBPACK_IMPORTED_MODULE_0_n3d_threejs___default.a.RepeatWrapping,
+      }
+    );
+    this.tempTexture = new __WEBPACK_IMPORTED_MODULE_0_n3d_threejs___default.a.WebGLRenderTarget(
+      this.width, this.height , {
+        minFilter : __WEBPACK_IMPORTED_MODULE_0_n3d_threejs___default.a.NearestFilter,
+        magFilter : __WEBPACK_IMPORTED_MODULE_0_n3d_threejs___default.a.NearestFilter,
+        wrapS : __WEBPACK_IMPORTED_MODULE_0_n3d_threejs___default.a.RepeatWrapping,
+        wrapT : __WEBPACK_IMPORTED_MODULE_0_n3d_threejs___default.a.RepeatWrapping,
+      }
+    );
+
+    this.commonCamera = new __WEBPACK_IMPORTED_MODULE_0_n3d_threejs___default.a.Camera();
+
+    this.tempScene = new __WEBPACK_IMPORTED_MODULE_0_n3d_threejs___default.a.Scene();
+    this.infoScene = new __WEBPACK_IMPORTED_MODULE_0_n3d_threejs___default.a.Scene();
+
+    this.uniforms = {
+      unif_texture : { type : "t", value : this.infoTexture },
+      unif_dt : { type : "1f", value : 0.0},
+      unif_isinit : { type : "1f", value : 0.0},
+      unif_seed : { type : "1f", value : Math.random() }
+    };
+    this.tempMesh = new __WEBPACK_IMPORTED_MODULE_0_n3d_threejs___default.a.Mesh(
+      new __WEBPACK_IMPORTED_MODULE_0_n3d_threejs___default.a.PlaneGeometry(2.0, 2.0),
+      new __WEBPACK_IMPORTED_MODULE_0_n3d_threejs___default.a.ShaderMaterial({
+        uniforms : this.uniforms,
+        fragmentShader : `
+        uniform sampler2D unif_texture;
+        uniform float unif_dt;
+        uniform float unif_isinit;
+        uniform float unif_seed;
+
+        varying vec2 vtex;
+
+        float rand(vec2 co){
+            return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453);
+        }
+
+        void main(void) {
+          vec4 retcolor = vec4(0.0);
+          if(unif_isinit < 0.5) {
+            retcolor = vec4(
+              rand(vtex + unif_seed + 0.01),
+              rand(vtex + unif_seed + 0.02),
+              rand(vtex + unif_seed + 0.03),
+              1.0);
+          }
+          else {
+            vec3 data = texture2D(unif_texture, vtex).rgb;
+            float rad = (data.g * 2.0);
+            float rpd = (data.b * 2.0 - 1.0);
+            rad += rpd * unif_dt;
+
+            retcolor = vec4(data.r, fract(rad * 0.5 + 1.0), data.b, 1.0);
+          }
+          gl_FragColor = retcolor;
+        }
+        `,
+        vertexShader : `
+        varying vec2 vtex;
+        void main(void) {
+          vtex = uv;
+          gl_Position = vec4(position, 1.0);
+        }
+        `
+      })
+    );
+    this.infoMesh = new __WEBPACK_IMPORTED_MODULE_0_n3d_threejs___default.a.Mesh(
+      new __WEBPACK_IMPORTED_MODULE_0_n3d_threejs___default.a.PlaneGeometry(2.0, 2.0),
+      new __WEBPACK_IMPORTED_MODULE_0_n3d_threejs___default.a.MeshBasicMaterial({map : this.tempTexture})
+    );
+
+    this.tempScene.add(this.tempMesh);
+    this.infoScene.add(this.infoMesh);
+
+    this.rebuild();
+  }
+
+  rebuild() {
+    this.uniforms.unif_isinit.value = 0.0;
+    this.uniforms.unif_seed.value = Math.random();
+    this.rdrr.render(this.tempScene, this.commonCamera, this.tempTexture);
+    this.rdrr.render(this.infoScene, this.commonCamera, this.infoTexture);
+  }
+
+  update(dt) {
+    this.uniforms.unif_dt.value = dt;
+    this.uniforms.unif_isinit.value = 1.0;
+    this.rdrr.render(this.tempScene, this.commonCamera, this.tempTexture);
+    this.rdrr.render(this.infoScene, this.commonCamera, this.infoTexture);
+
+  }
+
+  getWidth() { return this.width; }
+  getHeight() { return this.height; }
+  getTexture() { return this.infoTexture; }
+}
+
+/* harmony default export */ __webpack_exports__["a"] = (Grid);
 
 
 /***/ })

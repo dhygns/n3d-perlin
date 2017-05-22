@@ -13,8 +13,8 @@ import THREE from 'n3d-threejs'
 class Grid {
   constructor(rdrr, width, height) {
     this.rdrr = rdrr;
-    this.width = width == undefined ? 32 : width;
-    this.height = height == undefined ? 32 : height;
+    this.width = width == undefined ? 8 : width;
+    this.height = height == undefined ? 8 : height;
 
     this.infoTexture = new THREE.WebGLRenderTarget(
       this.width, this.height , {
@@ -64,14 +64,13 @@ class Grid {
           vec4 retcolor = vec4(0.0);
           if(unif_isinit < 0.5) {
             retcolor = vec4(
-              rand(vtex * unif_seed + 0.01),
-              rand(vtex * unif_seed + 0.11),
-              rand(vtex * unif_seed + 0.23),
+              rand(vtex + unif_seed + 0.01),
+              rand(vtex + unif_seed + 0.02),
+              rand(vtex + unif_seed + 0.03),
               1.0);
           }
           else {
             vec3 data = texture2D(unif_texture, vtex).rgb;
-            float spd = (data.r);
             float rad = (data.g * 2.0);
             float rpd = (data.b * 2.0 - 1.0);
             rad += rpd * unif_dt;

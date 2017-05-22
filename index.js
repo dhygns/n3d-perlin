@@ -14,7 +14,7 @@ class Perlin {
 
 
     this.grid = new Grid(this.rdrr, width, height);
-    this.flow = new Flow(this.rdrr, 512, 512, this.grid);
+    this.flow = new Flow(this.rdrr, 1024, 1024, this.grid);
 
 
     this.camera = new THREE.Camera();

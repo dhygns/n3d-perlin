@@ -3,8 +3,8 @@ import THREE from 'n3d-threejs'
 
 class Flow {
   constructor(rdrr, width, height, grid) {
-    this.width = width == undefined ? 512 : width;
-    this.height = height == undefined ? 512 : height;
+    this.width = width == undefined ? 128 : width;
+    this.height = height == undefined ? 128 : height;
 
     this.rdrr = rdrr;
 
@@ -58,16 +58,35 @@ class Flow {
             data11.x * cos(data11.y * 2.0 * PI)
           );
           vec2 grid = (vtex * unif_resolution - floor(vtex * unif_resolution));
+          vec2 pick00 = vec2(0.0 + grid.x , 0.0 + grid.y);
+          vec2 pick10 = vec2(1.0 - grid.x , 0.0 + grid.y);
+          vec2 pick01 = vec2(0.0 + grid.x , 1.0 - grid.y);
+          vec2 pick11 = vec2(1.0 - grid.x , 1.0 - grid.y);
 
-          float ty = mix(
-            dot(grid00, vec2(0.0 + grid.x , 0.0 + grid.y)),
-            dot(grid10, vec2(1.0 - grid.x , 0.0 + grid.y)), grid.x);
-          float by = mix(
-            dot(grid01, vec2(0.0 + grid.x , 1.0 - grid.y)),
-            dot(grid11, vec2(1.0 - grid.x , 1.0 - grid.y)), grid.x);
-          float va = mix(ty, by, grid.y);
+          // pick00 = normalize(pick00);
+          // pick10 = normalize(pick10);
+          // pick01 = normalize(pick01);
+          // pick11 = normalize(pick11);
 
-          gl_FragColor = vec4(vec3(va), 1.0);
+          float a0 = dot(grid00, pick00);
+          float a1 = dot(grid10, pick10);
+          float a2 = dot(grid01, pick01);
+          float a3 = dot(grid11, pick11);
+
+          float A0 = a0 + smoothstep(0.0, 1.0, grid.x) * ( a1 - a0);
+          float A1 = a2 + smoothstep(0.0, 1.0, grid.x) * ( a3 - a2);
+
+          // A0 = abs(A0);
+          // A1 = abs(A1);
+
+          float A2 = A0 + smoothstep(0.0, 1.0, grid.y) * ( A1 - A0);
+
+
+          gl_FragColor = vec4(
+            max(0.0,  A2),
+            0.0,//0.5 + 0.5 * A2,
+            max(0.0, -A2),
+            1.0);
         }
         `,
         vertexShader : `
