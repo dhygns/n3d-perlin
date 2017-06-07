@@ -33,40 +33,35 @@ class Flow {
 
         void main() {
 
-          vec2 offsetX = vec2(1.0, 0.0) / unif_resolution;
-          vec2 offsetY = vec2(0.0, 1.0) / unif_resolution;
+          vec2 st00 = vec2(floor(vtex.x * unif_resolution.x), floor(vtex.y * unif_resolution.y)) / unif_resolution;
+          vec2 st11 = vec2(ceil(vtex.x * unif_resolution.x), ceil(vtex.y * unif_resolution.y)) / unif_resolution;
 
-          vec4 data00 = texture2D(unif_texture, vtex + offsetX * 0.0 + offsetY * 0.0);
-          vec4 data01 = texture2D(unif_texture, vtex + offsetX * 0.0 + offsetY * 1.0);
-          vec4 data10 = texture2D(unif_texture, vtex + offsetX * 1.0 + offsetY * 0.0);
-          vec4 data11 = texture2D(unif_texture, vtex + offsetX * 1.0 + offsetY * 1.0);
+          vec4 data00 = texture2D(unif_texture, vec2(st00.x, st00.y));
+          vec4 data10 = texture2D(unif_texture, vec2(st11.x, st00.y));
+          vec4 data01 = texture2D(unif_texture, vec2(st00.x, st11.y));
+          vec4 data11 = texture2D(unif_texture, vec2(st11.x, st11.y));
 
           vec2 grid00 = vec2(
             data00.x * sin(data00.y * 2.0 * PI),
             data00.x * cos(data00.y * 2.0 * PI)
           );
-          vec2 grid01 = vec2(
-            data01.x * sin(data01.y * 2.0 * PI),
-            data01.x * cos(data01.y * 2.0 * PI)
-          );
           vec2 grid10 = vec2(
             data10.x * sin(data10.y * 2.0 * PI),
             data10.x * cos(data10.y * 2.0 * PI)
+          );
+          vec2 grid01 = vec2(
+            data01.x * sin(data01.y * 2.0 * PI),
+            data01.x * cos(data01.y * 2.0 * PI)
           );
           vec2 grid11 = vec2(
             data11.x * sin(data11.y * 2.0 * PI),
             data11.x * cos(data11.y * 2.0 * PI)
           );
           vec2 grid = (vtex * unif_resolution - floor(vtex * unif_resolution));
-          vec2 pick00 = vec2(0.0 + grid.x , 0.0 + grid.y);
-          vec2 pick10 = vec2(1.0 - grid.x , 0.0 + grid.y);
-          vec2 pick01 = vec2(0.0 + grid.x , 1.0 - grid.y);
-          vec2 pick11 = vec2(1.0 - grid.x , 1.0 - grid.y);
-
-          // pick00 = normalize(pick00);
-          // pick10 = normalize(pick10);
-          // pick01 = normalize(pick01);
-          // pick11 = normalize(pick11);
+          vec2 pick00 = vec2( 0.0 + grid.x , 0.0 + grid.y);
+          vec2 pick10 = vec2(-1.0 + grid.x , 0.0 + grid.y);
+          vec2 pick01 = vec2( 0.0 + grid.x ,-1.0 + grid.y);
+          vec2 pick11 = vec2(-1.0 + grid.x ,-1.0 + grid.y);
 
           float a0 = dot(grid00, pick00);
           float a1 = dot(grid10, pick10);
@@ -76,17 +71,10 @@ class Flow {
           float A0 = a0 + smoothstep(0.0, 1.0, grid.x) * ( a1 - a0);
           float A1 = a2 + smoothstep(0.0, 1.0, grid.x) * ( a3 - a2);
 
-          // A0 = abs(A0);
-          // A1 = abs(A1);
-
           float A2 = A0 + smoothstep(0.0, 1.0, grid.y) * ( A1 - A0);
 
 
-          gl_FragColor = vec4(
-            max(0.0,  A2),
-            0.0,//0.5 + 0.5 * A2,
-            max(0.0, -A2),
-            1.0);
+          gl_FragColor = vec4(vec3(A2 * 0.5 + 0.5), 1.0);
         }
         `,
         vertexShader : `

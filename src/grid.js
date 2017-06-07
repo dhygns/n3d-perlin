@@ -13,8 +13,8 @@ import THREE from 'n3d-threejs'
 class Grid {
   constructor(rdrr, width, height) {
     this.rdrr = rdrr;
-    this.width = width == undefined ? 8 : width;
-    this.height = height == undefined ? 8 : height;
+    this.width = width == undefined ? 4 : width;
+    this.height = height == undefined ? 4 : height;
 
     this.infoTexture = new THREE.WebGLRenderTarget(
       this.width, this.height , {
