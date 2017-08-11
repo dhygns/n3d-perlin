@@ -1,5 +1,4 @@
-import THREE from 'n3d-threejs'
-
+import * as THREE from 'three'
 
 /* Texture that get information of Grid */
 /*

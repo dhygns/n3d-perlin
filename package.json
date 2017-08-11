@@ -4,10 +4,8 @@
   "description": "Perlin Noise Filter For THREEjs",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "webpack ./demo/index.js ./demo/index.bundle.js",
-    "auto-build": "webpack --watch ./demo/index.js ./demo/index.bundle.js",
-    "start": "start ./demo/index.html"
+    "build": "webpack --watch ./src/index.js ./build/index.bundle.js",
+    "start": "start server"
   },
   "repository": {
     "type": "git",
@@ -24,7 +22,10 @@
     "url": "https://github.com/dhygns/n3d-perlin/issues"
   },
   "homepage": "https://github.com/dhygns/n3d-perlin#readme",
-  "dependencies": {
-    "n3d-threejs": "^76.0.0"
+  "dependencies": {},
+  "devDependencies": {
+    "express": "^4.15.4",
+    "three": "^0.86.0",
+    "webpack": "^3.5.3"
   }
 }

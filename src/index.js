@@ -1,9 +1,9 @@
-import THREE from 'n3d-threejs'
-import Grid from './src/grid.js'
-import Flow from './src/flow.js'
+import * as THREE from 'three'
+import Grid from './grid.js'
+import Flow from './flow.js'
 
 
-class Perlin {
+export default class Perlin {
   constructor(rdrr, width, height) {
     if(rdrr == undefined) {
       this.rdrr = new THREE.WebGLRenderer({alpha : false});
@@ -35,4 +35,3 @@ class Perlin {
   }
 }
 
-export default Perlin

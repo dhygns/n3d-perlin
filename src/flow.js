@@ -1,5 +1,4 @@
-
-import THREE from 'n3d-threejs'
+import * as THREE from 'three'
 
 class Flow {
   constructor(rdrr, width, height, grid) {
