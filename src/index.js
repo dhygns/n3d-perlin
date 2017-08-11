@@ -1,37 +1,26 @@
-import * as THREE from 'three'
-import Grid from './grid.js'
-import Flow from './flow.js'
+import * as THREE from "three"
+
+import Perlin from "./perlin/perlin.js"
 
 
-export default class Perlin {
-  constructor(rdrr, width, height) {
-    if(rdrr == undefined) {
-      this.rdrr = new THREE.WebGLRenderer({alpha : false});
-      this.rdrr.setSize(window.innerWidth, window.innerHeight);
-      document.body.appendChild(this.rdrr.domElement);
-    } else { this.rdrr = rdrr; }
-    // console.log(THREE);
+(function() {
+    this.setup();
+    this.animate(0, 0);
+}).bind({
+    setup : function() {
+        this.perlin = new Perlin();
 
 
-    this.grid = new Grid(this.rdrr, width, height);
-    this.flow = new Flow(this.rdrr, 1024, 1024, this.grid);
+    },
 
+    update : function(t, dt) {
+        this.perlin.update(dt);
+        this.perlin.renderForDebug();
 
-    this.camera = new THREE.Camera();
-    this.scene = new THREE.Scene();
-    this.scene.add(new THREE.Mesh(
-      new THREE.PlaneGeometry(2.0, 2.0),
-      new THREE.MeshBasicMaterial({ map : this.flow.getTexture() })
-    ));
-  }
+    },
 
-  update(dt) {
-    this.grid.update(dt);
-    this.flow.update(dt);
-  }
-
-  renderForDebug() {
-    this.rdrr.render(this.scene, this.camera);
-  }
-}
-
+    animate : function(oldt, nowt) {
+        this.update(nowt * 0.001, (nowt - oldt) * 0.001);
+        requestAnimationFrame(this.animate.bind(this, nowt));
+    }
+})();

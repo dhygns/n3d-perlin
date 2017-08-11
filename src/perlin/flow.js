@@ -10,7 +10,7 @@ class Flow {
 
     this.texture = new THREE.WebGLRenderTarget(this.width, this.height, {
       minFilter : THREE.LinearFilter,
-      magFilter : THREE.LinearFiletr,
+      magFilter : THREE.LinearFilter,
     });
 
     this.camera = new THREE.Camera();
